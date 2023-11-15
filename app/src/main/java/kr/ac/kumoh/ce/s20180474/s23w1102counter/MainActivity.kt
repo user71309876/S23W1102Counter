@@ -17,30 +17,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import kr.ac.kumoh.ce.s20180474.s23w1102counter.ui.theme.S23W1102CounterTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val vm = ViewModelProvider(this)[CounterViewModel::class.java]
+        val vm1 = ViewModelProvider(this)[CounterViewModel::class.java]
         super.onCreate(savedInstanceState)
         setContent {
             MyApp{
                 Column(
-                    modifier=Modifier
+                    modifier= Modifier
                         .fillMaxSize()
                         .padding(8.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Clicker()
-                    Counter()
-                    Counter()
+                    Counter(vm)
+                    Counter(vm1)
+                    //view model은 싱글턴 객체이므로 같이 증가한다
+                    //따로 증가시킬려면 따로 viewModel class를 만들어야 함
                 }
             }
         }
@@ -86,16 +94,17 @@ fun Clicker(){
 }
 
 @Composable
-fun Counter(){
-    val (txtInteger,setTxtInteger)= remember {
-        mutableStateOf(0)
-    }//useState???
+fun Counter(vm:CounterViewModel){
+//    val (txtInteger,setTxtInteger)= rememberSaveable {
+//        mutableStateOf(0)
+//    }//useState???
+    val count by vm.count.observeAsState(0)
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "$txtInteger",
+        Text(text = "$count",
             fontSize = 70.sp,
         )
         Row(
@@ -103,14 +112,14 @@ fun Counter(){
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    setTxtInteger(txtInteger+1)
+                    vm.onAdd()
                 }
             ) { Text("증가") }
             Spacer(modifier=Modifier.width(8.dp))
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    if(txtInteger>0)setTxtInteger(txtInteger-1)
+                    if(count>0)vm.onSub()
                 }
             ) { Text("감소") }
         }
